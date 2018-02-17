@@ -3,14 +3,14 @@ import numpy as np
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.decomposition import PCA
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import Imputer
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 
 
 class PredictiveImputer(BaseEstimator, TransformerMixin):
-    def __init__(self, max_iter=10, initial_strategy='mean', tol=1e-3, f_model="RandomForest"):
+    def __init__(self, max_iter=10, ntree=50, initial_strategy='mean', tol=1e-3, f_model="RandomForest", variable_class='r'):
         self.max_iter = max_iter
         self.initial_strategy = initial_strategy
         self.initial_imputer = Imputer(strategy=initial_strategy)
@@ -30,7 +30,14 @@ class PredictiveImputer(BaseEstimator, TransformerMixin):
         self.gamma_ = []
 
         if self.f_model == "RandomForest":
-            self.estimators_ = [RandomForestRegressor(n_estimators=50, n_jobs=-1, random_state=i, **kwargs) for i in range(X.shape[1])]
+            # Assert if any of the Random Forests should be predictors
+            self.estimators_ = []
+            if type(variable_class) == 'list':
+                for i in variable_class:
+                    if i == 'r':
+                        self.estimators_.append(RandomForestRegressor(n_estimators=ntree, n_jobs=-1, random_state=i, **kwargs))
+                    elif i == 'c':
+                        self.estimators_.append(RandomForestClassifier(n_estimators=ntree, n_jobs=-1, random_state=i, **kwargs))
         elif self.f_model == "KNN":
             self.estimators_ = [KNeighborsRegressor(n_neighbors=min(5, sum(~X_nan[:, i])), **kwargs) for i in range(X.shape[1])]
         elif self.f_model == "PCA":
