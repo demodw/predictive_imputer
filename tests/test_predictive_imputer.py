@@ -22,6 +22,7 @@ X = np.array([
     [4, 5, np.nan],    # even: avg nonzeros
     [-4, -5, np.nan],  # even: avg negatives
     [-1, 2, np.nan],   # even: crossing neg and pos
+    [0, 1, np.nan]
 ]).transpose()
 
 def test_predictive_imputer():

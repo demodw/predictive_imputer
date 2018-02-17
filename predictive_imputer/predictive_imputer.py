@@ -16,6 +16,7 @@ class PredictiveImputer(BaseEstimator, TransformerMixin):
         self.initial_imputer = Imputer(strategy=initial_strategy)
         self.tol = tol
         self.f_model = f_model
+        self.variable_class = variable_class
 
     def fit(self, X, y=None, **kwargs):
         X = check_array(X, dtype=np.float64, force_all_finite=False)
@@ -32,12 +33,14 @@ class PredictiveImputer(BaseEstimator, TransformerMixin):
         if self.f_model == "RandomForest":
             # Assert if any of the Random Forests should be predictors
             self.estimators_ = []
-            if type(variable_class) == 'list':
-                for i in variable_class:
+            if type(self.variable_class) == 'list':
+                for i in self.ariable_class:
                     if i == 'r':
                         self.estimators_.append(RandomForestRegressor(n_estimators=ntree, n_jobs=-1, random_state=i, **kwargs))
                     elif i == 'c':
                         self.estimators_.append(RandomForestClassifier(n_estimators=ntree, n_jobs=-1, random_state=i, **kwargs))
+            else:
+                self.estimators_ = [RandomForestRegressor(n_estimators=50, n_jobs=-1, random_state=i, **kwargs) for i in range(X.shape[1])]
         elif self.f_model == "KNN":
             self.estimators_ = [KNeighborsRegressor(n_neighbors=min(5, sum(~X_nan[:, i])), **kwargs) for i in range(X.shape[1])]
         elif self.f_model == "PCA":
